@@ -1,0 +1,391 @@
+<?php
+
+    namespace Maestro\Router;
+
+    require_once __DIR__ . '/FastRoute/bootstrap.php';
+
+    use Maestro\Controller;
+    use Maestro\HTTP\Request;
+    use Maestro\HTTP\Response;
+    use Maestro\Maestro;
+    use Maestro\Utils\HttpCommons;
+    use FastRoute\BadRouteException;
+    use FastRoute\Dispatcher;
+    use FastRoute\RouteCollector;
+
+    /**
+     * Class Router
+     * @package Maestro\Router
+     */
+    class Router extends HttpCommons
+    {
+        const CACHE_FILE_LOCATION = '/tmp/maestro.routing.cache';
+
+        /** @var array - Controller instanciation cache array */
+        static private $__controllerCache = array();
+
+        /** @var string - Controllers base namespace */
+        protected $_controllerNamespace;
+        /** @var string - Controller name */
+        protected $_controller;
+        /** @var string - Action name */
+        protected $_action;
+        /** @var Dispatcher - Router handling instance */
+        protected $_dispatcher;
+        /** @var array - Routes Array */
+        protected $_routes;
+        /** @var string - Route prefix when using folders/namespaces */
+        protected $_prefix;
+        /** @var Request - Request object */
+        protected $_req;
+        /** @var Response - Response object */
+        protected $_res;
+
+
+        /**
+         * CTOR
+         */
+        public function __construct()
+        {
+            $this->_routes              = array();
+            $this->_dispatcher          = null;
+            $this->_controller          = null;
+            $this->_action              = null;
+            $this->_prefix              = null;
+            $this->_controllerNamespace = null;
+        }
+
+        /**
+         * Assigns incoming request
+         * @param Request $req
+         * @return $this
+         */
+        public function assignRequest(Request $req)
+        {
+            $this->_req = $req;
+
+            return $this;
+        }
+
+        /**
+         * Assigns controller base namespace
+         * @param $ns
+         * @return $this
+         */
+        public function assignControllerNamespace($ns)
+        {
+            $this->_controllerNamespace = $ns;
+
+            return $this;
+        }
+
+        /**
+         * Inits dispatcher according to routes.
+         *
+         * @chainable
+         * @return $this
+         */
+        public function init()
+        {
+            $routes = $this->_routes;
+
+            $this->_dispatcher = \FastRoute\cachedDispatcher(function (RouteCollector $routeCollector) use ($routes)
+            {
+                foreach ($routes as &$r)
+                    foreach ($r['verbs'] as $v)
+                        $routeCollector->addRoute($v, $r['pattern'], $r['handler']);
+            }, array(
+                'cacheFile'     => self::CACHE_FILE_LOCATION,
+                'cacheDisabled' => Maestro::DEBUG
+            ));
+
+            return $this;
+        }
+
+        /**
+         * @throws \Exception
+         * @return bool|Response
+         */
+        public function drive()
+        {
+            if ($this->_dispatcher === null)
+                throw new \Exception('Maestro::Router - Dispatcher not initialized!');
+
+            $result     = $this->_dispatcher->dispatch($this->_req->method, $this->_req->uri);
+            $this->_res = new Response();
+
+            switch ($result[0])
+            {
+                case Dispatcher::NOT_FOUND:
+                    $this->_res->send(404);
+                    break;
+                case Dispatcher::METHOD_NOT_ALLOWED:
+                    $this->_res->set('allow', implode(', ', $result[1]));
+                    $this->_res->send(405);
+                    break;
+                case Dispatcher::FOUND:
+                    list(, $handler, $vars) = $result;
+
+                    $this->_req->params = $vars;
+
+                    if ($handler instanceof \Closure) // Simple closure
+                    {
+                        $this->_res->locals = self::_invokeClosureWithParams($this, $handler);
+                        break;
+                    }
+
+                    $tmp = $this->_parseHandler($handler);
+                    if ($tmp === null)
+                        $tmp = $this->_parseHandler($handler, '::');
+
+                    if ($tmp === null)
+                        throw new BadRouteException('Impossible to parse given handler string [' . $handler . ']');
+
+                    list($class, $method) = $tmp;
+
+                    if (!class_exists($class))
+                        require_once Maestro::gi()->get('app path').'/controllers/'.$this->_prefixToPath().ucfirst($class).'.php';
+
+                    $class = $this->_controllerNamespace . $this->_prefixToPath() . '\\' . ucfirst($class);
+
+                    if (!class_exists($class))
+                    {
+                        $this->_res->send(500);
+                        throw new \Exception('Controller Class not found! ['.$class.']');
+                    }
+
+                    $controller      = self::_cachedController($class);
+                    $controller->req = $this->_req;
+                    $controller->res = $this->_res;
+                    $controller->app = Maestro::gi();
+                    $controller->init();
+
+                    if (!method_exists($controller, $method))
+                    {
+                        $this->_res->send(500);
+                        break;
+                    }
+
+                    $this->_controller = $class;
+                    $this->_action     = $method;
+
+                    $this->_res->renderer()->curRoute($this->_controller, $this->_action);
+                    $this->_res->locals = self::_invokeMethodWithParams($controller, $method, $vars);
+                    break;
+            }
+
+            return $this->_res;
+        }
+
+        /**
+         * Invokes a closure with request and response given by reference
+         * @param Router   $ctx
+         * @param callable $closure
+         * @return array
+         */
+        static protected function _invokeClosureWithParams(Router $ctx, \Closure $closure)
+        {
+            // Inject req and res by ref
+            return $closure($ctx->_req, $ctx->_res);
+        }
+
+        /**
+         * @param string $handler
+         * @param string $sep
+         * @return array|null
+         */
+        private function _parseHandler($handler, $sep = '#')
+        {
+            $tmp = explode($sep, $handler);
+            if ($tmp[0] !== $handler)
+                return $tmp;
+
+            return null;
+        }
+
+        /**
+         * @return mixed|string
+         */
+        private function _prefixToPath()
+        {
+            return ($this->_prefix ? str_replace('/', '\\', substr($this->_prefix, 1)) : '');
+        }
+
+        /**
+         * @param $class
+         * @return mixed
+         * @throws \Exception
+         */
+        static protected function &_cachedController($class)
+        {
+            if (!isset(self::$__controllerCache[$class])) // Init controller and put it in cache for future usages
+            {
+                $controller                      = new $class();
+                $controller->app                 = Maestro::gi();
+                self::$__controllerCache[$class] = array(
+                    '__controller' => $controller
+                );
+            }
+            else
+                $controller = & self::$__controllerCache[$class]['__controller'];
+
+            return $controller;
+        }
+
+        /**
+         * @param Controller $controller
+         * @param            $method
+         * @param            $params
+         * @return array
+         */
+        static protected function _invokeMethodWithParams($controller, $method, $params)
+        {
+            $class = get_class($controller);
+            if (!isset(self::$__controllerCache[$class][$method])) // Cache reflections because those are *very* costly
+                self::$__controllerCache[$class][$method] = new \ReflectionMethod($controller, $method);
+
+            /** @var \ReflectionMethod $reflection */
+            $reflection   = & self::$__controllerCache[$class][$method];
+            $actionParams = array();
+            foreach ($reflection->getParameters() as $p)
+            {
+                $actionParams[] = (isset($params[$p->getName()])
+                    ? $params[$p->getName()]
+                    : $p->getDefaultValue());
+            }
+
+            return $controller->invoke($method, $actionParams);
+        }
+
+        /**
+         * Returns current controller name
+         * @return null|string
+         */
+        public function getController()
+        {
+            return $this->_controller;
+        }
+
+        /**
+         * Returns current action name
+         * @return null|string
+         */
+        public function getAction()
+        {
+            return $this->_action;
+        }
+
+        /**
+         * Use with a closure that takes this router as a param
+         * @param          $path
+         * @param callable $folderDef
+         */
+        public function ns($path, \Closure $folderDef)
+        {
+            $this->_prefix = $path;
+            $folderDef($this);
+            $this->_prefix = null;
+        }
+
+        /**
+         * @param $pattern
+         * @param $handler
+         * @return $this
+         */
+        public function get($pattern, $handler)
+        {
+            return $this->match($pattern, $handler, array(self::HTTP_VERB_GET));
+        }
+
+        /**
+         * @param       $pattern
+         * @param       $handler
+         * @param array $verbs
+         * @chainable
+         * @return $this
+         */
+        public function match($pattern, $handler, $verbs = array(self::HTTP_VERB_GET))
+        {
+            if ($this->_prefix !== null)
+                $pattern = $this->_prefix . $pattern;
+
+            $this->_routes[$pattern] = array(
+                'verbs'   => array_unique(array_merge(
+                    isset($this->_routes[$pattern]) ? $this->_routes[$pattern]['verbs'] : array(),
+                    $verbs
+                )),
+                'handler' => $handler,
+                'pattern' => $pattern
+            );
+
+            return $this;
+        }
+
+        /**
+         * @param array $routes
+         * @return $this
+         */
+        public function batchMatch(array $routes)
+        {
+            foreach ($routes as $r)
+                $this->match($r['pattern'], $r['handler'], $r['verbs']);
+
+            return $this;
+        }
+
+        /**
+         * @param $pattern
+         * @param $handler
+         * @return $this
+         */
+        public function post($pattern, $handler)
+        {
+            return $this->match($pattern, $handler, array(self::HTTP_VERB_POST));
+        }
+
+        /**
+         * @param $pattern
+         * @param $handler
+         * @return $this
+         */
+        public function put($pattern, $handler)
+        {
+            return $this->match($pattern, $handler, array(self::HTTP_VERB_PUT));
+        }
+
+        /**
+         * @param $pattern
+         * @param $handler
+         * @return $this
+         */
+        public function del($pattern, $handler)
+        {
+            return $this->match($pattern, $handler, array(self::HTTP_VERB_DELETE));
+        }
+
+        /**
+         * @param $pattern
+         * @param $handler
+         * @return $this
+         */
+        public function head($pattern, $handler)
+        {
+            return $this->match($pattern, $handler, array(self::HTTP_VERB_HEAD));
+        }
+
+        /**
+         * @param $pattern
+         * @param $handler
+         * @return $this
+         */
+        public function all($pattern, $handler)
+        {
+            return $this->match($pattern, $handler, array(
+                self::HTTP_VERB_GET,
+                self::HTTP_VERB_POST,
+                self::HTTP_VERB_DELETE,
+                self::HTTP_VERB_PUT,
+                self::HTTP_VERB_HEAD
+            ));
+        }
+    }
