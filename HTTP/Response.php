@@ -11,7 +11,7 @@
      * Class Response
      * @package Maestro\HTTP
      */
-    class Response
+    class Response implements \ArrayAccess
     {
         /** @var array - Locals data array */
         public $locals;
@@ -51,7 +51,7 @@
         /**
          * Sets current response status code
          * @param $code
-         * @return $this
+         * @return self
          */
         public function status($code)
         {
@@ -88,7 +88,7 @@
          * @param string $name
          * @param string $value
          * @param array  $options
-         * @return $this
+         * @return self
          */
         public function cookie($name, $value, $options = array())
         {
@@ -100,7 +100,7 @@
         /**
          * @param string $name
          * @param array  $options
-         * @return $this
+         * @return self
          */
         public function clearCookie($name, $options = array())
         {
@@ -113,7 +113,7 @@
          * Redirects with a 302 by default. provide $status if you need to change status code
          * @param int|string  $status
          * @param string|null $url
-         * @return $this
+         * @return self
          */
         public function redirect($status, $url = null)
         {
@@ -133,7 +133,7 @@
         /**
          * Used to generate Link header
          * @param array $data
-         * @return $this
+         * @return self
          */
         public function links(array $data)
         {
@@ -143,10 +143,19 @@
         }
 
         /**
+         * Accessor for locked request
+         * @return bool
+         */
+        public function ended()
+        {
+            return $this->__locked;
+        }
+
+        /**
          * Send a response.
          * @param int|string|array|resource  $bodyOrStatus
          * @param null|string|array|resource $body
-         * @return $this
+         * @return self
          */
         public function send($bodyOrStatus, $body = null)
         {
@@ -173,7 +182,7 @@
          * Send a json response
          * @param      $bodyOrStatus
          * @param null $body
-         * @return $this
+         * @return self
          */
         public function json($bodyOrStatus, $body = null)
         {
@@ -195,7 +204,7 @@
          * Streams a file
          * @param $path
          * @param $options
-         * @return $this
+         * @return self
          */
         public function sendfile($path, array $options = array())
         {
@@ -223,7 +232,7 @@
          * Sends a jsonp response
          * @param      $bodyOrStatus
          * @param null $body
-         * @return $this
+         * @return self
          */
         public function jsonp($bodyOrStatus, $body = null)
         {
@@ -235,7 +244,6 @@
             $this->set('content-type', 'application/javascript');
             $this->renderer('jsonp');
 
-            /** @noinspection PhpUndefinedFieldInspection */
             $this->_renderer->callback = Maestro::gi()->get('jsonp callback name') ?: 'callback';
             $this->_end($body, $this->_statusCode);
 
@@ -247,7 +255,7 @@
          * @param string|array $field
          * @param mixed|null   $value
          * @param bool         $overwrite
-         * @return $this
+         * @return self
          */
         public function set($field, $value = null, $overwrite = true)
         {
@@ -280,7 +288,7 @@
             if ($body === null)
                 $body = $tst;
 
-            if (!isset($this->_headers['content-length']))
+            if (is_string($body) && !isset($this->_headers['content-length']))
                 $this->set('content-length', strlen($body));
 
             header('HTTP/1.1 ' . $status . ' ' . $tst, true, $status);
@@ -290,7 +298,7 @@
         /**
          * Starts rendering
          * @param mixed $data
-         * @return $this
+         * @return self
          */
         public function render($data = null)
         {
@@ -370,5 +378,68 @@
                     );
                 }
             }
+        }
+
+        /**
+         * (PHP 5 &gt;= 5.0.0)<br/>
+         * Whether a offset exists
+         * @link http://php.net/manual/en/arrayaccess.offsetexists.php
+         * @param mixed $offset <p>
+         *                      An offset to check for.
+         *                      </p>
+         * @return boolean true on success or false on failure.
+         *                      </p>
+         *                      <p>
+         *                      The return value will be casted to boolean if non-boolean was returned.
+         */
+        public function offsetExists($offset)
+        {
+            return isset($this->locals[$offset]);
+        }
+
+        /**
+         * (PHP 5 &gt;= 5.0.0)<br/>
+         * Offset to retrieve
+         * @link http://php.net/manual/en/arrayaccess.offsetget.php
+         * @param mixed $offset <p>
+         *                      The offset to retrieve.
+         *                      </p>
+         * @return mixed Can return all value types.
+         */
+        public function offsetGet($offset)
+        {
+            return $this->locals[$offset];
+        }
+
+        /**
+         * (PHP 5 &gt;= 5.0.0)<br/>
+         * Offset to set
+         * @link http://php.net/manual/en/arrayaccess.offsetset.php
+         * @param mixed $offset <p>
+         *                      The offset to assign the value to.
+         *                      </p>
+         * @param mixed $value  <p>
+         *                      The value to set.
+         *                      </p>
+         * @return void
+         */
+        public function offsetSet($offset, $value)
+        {
+            $this->locals[$offset] = $value;
+        }
+
+        /**
+         * (PHP 5 &gt;= 5.0.0)<br/>
+         * Offset to unset
+         * @link http://php.net/manual/en/arrayaccess.offsetunset.php
+         * @param mixed $offset <p>
+         *                      The offset to unset.
+         *                      </p>
+         * @return void
+         */
+        public function offsetUnset($offset)
+        {
+            if (isset($this->locals[$offset]))
+                unset($this->locals[$offset]);
         }
     }

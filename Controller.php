@@ -4,7 +4,6 @@
 
     use Maestro\HTTP\Request;
     use Maestro\HTTP\Response;
-    use Maestro\Renderer\RenderTypes\PHPRenderer;
 
     /**
      * Class Controller
@@ -48,8 +47,13 @@
          */
         final public function invoke($action, $params)
         {
+            $ret = array();
             $this->_callBefore('*');
+            if ($this->res->ended())
+                return $ret;
             $this->_callBefore($action);
+            if ($this->res->ended())
+                return $ret;
             $ret = call_user_func_array(array($this, $action), $params);
             $this->_callAfter('*');
             $this->_callAfter($action);
@@ -90,7 +94,7 @@
          * Adds a $handler to before filters on designated $action
          * @param string   $action
          * @param callable $handler
-         * @return $this
+         * @return self
          */
         final public function before($action, \Closure $handler)
         {
@@ -107,7 +111,7 @@
          * Adds a $handler to after filters on designated $action
          * @param string   $action
          * @param callable $handler
-         * @return $this
+         * @return self
          */
         final public function after($action, \Closure $handler)
         {
@@ -143,10 +147,7 @@
          */
         final public function render()
         {
-            $renderer = $this->res->renderer();
-            if ($renderer instanceof PHPRenderer)
-                $renderer->setLayoutPath($this->_layoutPath);
-
+            $this->res->renderer()->setLayoutPath($this->_layoutPath);
             $this->res->render($this->_data);
         }
 
@@ -155,7 +156,7 @@
          * @param $name
          * @return null|mixed
          */
-        final public function __get($name)
+        final public function &__get($name)
         {
             return isset($this->_data[$name]) ? $this->_data[$name] : null;
         }

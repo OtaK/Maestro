@@ -4,6 +4,10 @@
 
     use Maestro\Controller;
 
+    /**
+     * Class Test
+     * @package Maestro\Tests\Controllers
+     */
     class Test extends Controller
     {
         protected function _setup()

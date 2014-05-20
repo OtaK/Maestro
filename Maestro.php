@@ -27,6 +27,8 @@
         /** @var Settings - Settings object */
         static protected $_settings = null;
 
+        /** @var array - Class clusters container */
+        protected $_containers;
         /** @var Router - Router handling instance */
         protected $_router;
         /** @var array - Routes array */
@@ -45,6 +47,7 @@
         {
             $this->_router      = new Router();
             $this->_controllers = array();
+            $this->_containers  = array();
             $this->_middlewares = array();
             $this->_routes      = array();
         }
@@ -77,7 +80,7 @@
 
         /**
          * @param $field
-         * @return $this
+         * @return self
          */
         public function enable($field)
         {
@@ -89,7 +92,7 @@
 
         /**
          * @param $field
-         * @return $this
+         * @return self
          */
         public function disable($field)
         {
@@ -135,7 +138,7 @@
         /**
          * @param $field
          * @param $value
-         * @return $this
+         * @return self
          */
         public function set($field, $value)
         {
@@ -148,7 +151,7 @@
         /**
          * @param      $path
          * @param null $middleware
-         * @return $this
+         * @return self
          */
         public function mount($path, $middleware = null)
         {
@@ -184,6 +187,8 @@
         {
             self::__sinst();
 
+            $this->_runInitializers();
+
             $this->_router
                 ->batchMatch($this->_routes)
                 ->init()
@@ -198,5 +203,53 @@
         public function route()
         {
             return $this->_router;
+        }
+
+        /**
+         * Runs all found initializers
+         * @return self
+         */
+        private function _runInitializers()
+        {
+            foreach(glob(self::$_settings['app path'].'/config/initializers/*.php') as $initFile)
+            {
+                /** @var \Closure $initializer */
+                $initializer = include $initFile;
+                $initializer($this);
+            }
+
+            return $this;
+        }
+
+        /**
+         * @param $name
+         * @return null
+         */
+        public function __get($name)
+        {
+            return (isset($this->_containers[$name]) ? $this->_containers[$name] : null);
+        }
+
+        /**
+         * @param $name
+         * @param $value
+         */
+        public function __set($name, $value)
+        {
+            $this->_containers[$name] = $value;
+        }
+
+        /**
+         * @param null $path
+         * @return self
+         */
+        public function loadRoutes($path = null)
+        {
+            $path = $path ?: $this->get('app path').'/config/routes.php';
+            $closure = include $path;
+            if ($closure instanceof \Closure)
+                $closure($this->_router);
+
+            return $this;
         }
     }

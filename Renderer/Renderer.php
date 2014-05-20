@@ -60,7 +60,7 @@
         /**
          * @param $controller
          * @param $action
-         * @return $this
+         * @return self
          */
         public function curRoute($controller, $action)
         {

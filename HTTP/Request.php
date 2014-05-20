@@ -13,8 +13,11 @@
      * @changelog
      *      1.0: Stable version
      */
-    class Request extends HttpCommons
+    class Request extends HttpCommons implements \ArrayAccess
     {
+        /** @var array - Class clusters container */
+        protected $_containers;
+
         /** @var string - HTTP Method used */
         public $method;
         /** @var array - Query params assoc array */
@@ -95,13 +98,11 @@
 
         /**
          * Refreshes the request according to webserver vars/env
-         * @return $this
+         * @return self
          */
         public function refresh()
         {
             $this->method  = $_SERVER['REQUEST_METHOD'];
-            $this->params  = array();
-            $this->body    = $this->_requestBody();
             $this->headers = $this->_parseHeaders();
 
             $this->protocol = self::PROTOCOL_HTTP;
@@ -116,7 +117,7 @@
             $this->host     = isset($queryElements['host']) ? $queryElements['host'] : null;
             $this->protocol = isset($queryElements['scheme']) ? $queryElements['scheme'] : null;
 
-            $this->contentType   = isset($this->headers['content-type']) ? $this->headers['content-type'] : null;
+            $this->contentType   = isset($_SERVER['CONTENT_TYPE']) ? $_SERVER['CONTENT_TYPE'] : null;
             $this->ua            = isset($this->headers['user-agent']) ? $this->headers['user-agent'] : null;
             $this->cookies       = $_COOKIE;
             $this->signedCookies = $this->_cookieParser->parse($_COOKIE);
@@ -131,6 +132,9 @@
                 $this->ips = explode(', ', $this->headers['x-forwarded-for']);
             else
                 $this->ips = array($this->ip);
+
+            parse_str($this->query, $this->params);
+            $this->body    = $this->_requestBody();
 
             return $this;
         }
@@ -224,5 +228,89 @@
                 return $this->query[$name];
 
             return $default;
+        }
+
+        /**
+         * Getsetter for object extension container
+         * @param      $name
+         * @param null $value
+         * @return self
+         */
+        final public function container($name, $value = null)
+        {
+            if ($value === null)
+            {
+                if (isset($this->_containers[$name]))
+                    return $this->_containers[$name];
+
+                return null;
+            }
+
+
+            $this->_containers[$name] = $value;
+            return $this;
+        }
+
+        /**
+         * (PHP 5 &gt;= 5.0.0)<br/>
+         * Whether a offset exists
+         * @link http://php.net/manual/en/arrayaccess.offsetexists.php
+         * @param mixed $offset <p>
+         *                      An offset to check for.
+         *                      </p>
+         * @return boolean true on success or false on failure.
+         *                      </p>
+         *                      <p>
+         *                      The return value will be casted to boolean if non-boolean was returned.
+         */
+        public function offsetExists($offset)
+        {
+            return isset($this->_containers[$offset]);
+        }
+
+        /**
+         * (PHP 5 &gt;= 5.0.0)<br/>
+         * Offset to retrieve
+         * @link http://php.net/manual/en/arrayaccess.offsetget.php
+         * @param mixed $offset <p>
+         *                      The offset to retrieve.
+         *                      </p>
+         * @return mixed Can return all value types.
+         */
+        public function offsetGet($offset)
+        {
+            return $this->container($offset);
+        }
+
+        /**
+         * (PHP 5 &gt;= 5.0.0)<br/>
+         * Offset to set
+         * @link http://php.net/manual/en/arrayaccess.offsetset.php
+         * @param mixed $offset <p>
+         *                      The offset to assign the value to.
+         *                      </p>
+         * @param mixed $value  <p>
+         *                      The value to set.
+         *                      </p>
+         * @return void
+         */
+        public function offsetSet($offset, $value)
+        {
+            $this->container($offset, $value);
+        }
+
+        /**
+         * (PHP 5 &gt;= 5.0.0)<br/>
+         * Offset to unset
+         * @link http://php.net/manual/en/arrayaccess.offsetunset.php
+         * @param mixed $offset <p>
+         *                      The offset to unset.
+         *                      </p>
+         * @return void
+         */
+        public function offsetUnset($offset)
+        {
+            if (isset($this->_containers[$offset]))
+                unset($this->_containers[$offset]);
         }
     }

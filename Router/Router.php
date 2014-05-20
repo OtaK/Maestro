@@ -58,7 +58,7 @@
         /**
          * Assigns incoming request
          * @param Request $req
-         * @return $this
+         * @return self
          */
         public function assignRequest(Request $req)
         {
@@ -70,7 +70,7 @@
         /**
          * Assigns controller base namespace
          * @param $ns
-         * @return $this
+         * @return self
          */
         public function assignControllerNamespace($ns)
         {
@@ -83,7 +83,7 @@
          * Inits dispatcher according to routes.
          *
          * @chainable
-         * @return $this
+         * @return self
          */
         public function init()
         {
@@ -92,8 +92,8 @@
             $this->_dispatcher = \FastRoute\cachedDispatcher(function (RouteCollector $routeCollector) use ($routes)
             {
                 foreach ($routes as &$r)
-                    foreach ($r['verbs'] as $v)
-                        $routeCollector->addRoute($v, $r['pattern'], $r['handler']);
+                    foreach ($r['verbs'] as $verb => $handler)
+                        $routeCollector->addRoute($verb, $r['pattern'], $handler);
             }, array(
                 'cacheFile'     => self::CACHE_FILE_LOCATION,
                 'cacheDisabled' => Maestro::DEBUG
@@ -144,9 +144,11 @@
                     list($class, $method) = $tmp;
 
                     if (!class_exists($class))
-                        require_once Maestro::gi()->get('app path').'/controllers/'.$this->_prefixToPath().ucfirst($class).'.php';
+                        require_once Maestro::gi()->get('app path').'/controllers/'.($this->_prefix !== null ? $this->_prefix.'/' : '').ucfirst($class).'.php';
 
-                    $class = $this->_controllerNamespace . $this->_prefixToPath() . '\\' . ucfirst($class);
+                    $class = $this->_controllerNamespace .
+                        ($this->_prefix ? '\\'.str_replace(array('/', '.'), array('\\', '_'), $this->_prefix) : '') .
+                        '\\' . ucfirst($class);
 
                     if (!class_exists($class))
                     {
@@ -185,7 +187,7 @@
          */
         static protected function _invokeClosureWithParams(Router $ctx, \Closure $closure)
         {
-            // Inject req and res by ref
+            // Inject req and res
             return $closure($ctx->_req, $ctx->_res);
         }
 
@@ -196,19 +198,18 @@
          */
         private function _parseHandler($handler, $sep = '#')
         {
+            $prefix = explode('/', $handler);
+            if ($prefix[0] !== $handler)
+            {
+                $this->_prefix = $prefix[1];
+                $handler = $prefix[2];
+            }
+
             $tmp = explode($sep, $handler);
             if ($tmp[0] !== $handler)
                 return $tmp;
 
             return null;
-        }
-
-        /**
-         * @return mixed|string
-         */
-        private function _prefixToPath()
-        {
-            return ($this->_prefix ? str_replace('/', '\\', substr($this->_prefix, 1)) : '');
         }
 
         /**
@@ -290,7 +291,7 @@
         /**
          * @param $pattern
          * @param $handler
-         * @return $this
+         * @return self
          */
         public function get($pattern, $handler)
         {
@@ -302,19 +303,26 @@
          * @param       $handler
          * @param array $verbs
          * @chainable
-         * @return $this
+         * @return self
          */
         public function match($pattern, $handler, $verbs = array(self::HTTP_VERB_GET))
         {
             if ($this->_prefix !== null)
+            {
                 $pattern = $this->_prefix . $pattern;
+                if (is_string($handler))
+                    $handler = $this->_prefix . '/' . $handler;
+            }
+
+            $verbs = array_flip($verbs);
+            foreach ($verbs as &$v)
+                $v = $handler;
 
             $this->_routes[$pattern] = array(
                 'verbs'   => array_unique(array_merge(
                     isset($this->_routes[$pattern]) ? $this->_routes[$pattern]['verbs'] : array(),
                     $verbs
-                )),
-                'handler' => $handler,
+                ), SORT_REGULAR),
                 'pattern' => $pattern
             );
 
@@ -323,7 +331,7 @@
 
         /**
          * @param array $routes
-         * @return $this
+         * @return self
          */
         public function batchMatch(array $routes)
         {
@@ -336,7 +344,7 @@
         /**
          * @param $pattern
          * @param $handler
-         * @return $this
+         * @return self
          */
         public function post($pattern, $handler)
         {
@@ -346,7 +354,7 @@
         /**
          * @param $pattern
          * @param $handler
-         * @return $this
+         * @return self
          */
         public function put($pattern, $handler)
         {
@@ -356,7 +364,7 @@
         /**
          * @param $pattern
          * @param $handler
-         * @return $this
+         * @return self
          */
         public function del($pattern, $handler)
         {
@@ -366,7 +374,7 @@
         /**
          * @param $pattern
          * @param $handler
-         * @return $this
+         * @return self
          */
         public function head($pattern, $handler)
         {
@@ -376,7 +384,7 @@
         /**
          * @param $pattern
          * @param $handler
-         * @return $this
+         * @return self
          */
         public function all($pattern, $handler)
         {
