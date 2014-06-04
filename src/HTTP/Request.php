@@ -110,7 +110,7 @@
             $this->secure   = !empty($_SERVER['HTTPS']);
 
             $this->url = $this->_baseUrl();
-            $this->uri = $_SERVER['REQUEST_URI'];
+            $this->uri = substr($_SERVER['REQUEST_URI'], 0, strpos($_SERVER['REQUEST_URI'], '?'));
 
             $queryElements  = parse_url($this->url);
             $this->query    = isset($queryElements['query']) ? $queryElements['query'] : null;

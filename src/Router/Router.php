@@ -125,7 +125,7 @@
                 case Dispatcher::FOUND:
                     list(, $handler, $vars) = $result;
 
-                    $this->_req->params = $vars;
+                    $this->_req->body = $vars;
 
                     if ($handler instanceof \Closure) // Simple closure
                     {
