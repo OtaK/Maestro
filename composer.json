@@ -1,0 +1,19 @@
+{
+    "name": "otak/maestro",
+    "description": "Next-generation MVC Micro-Framework for PHP5.3+",
+    "keywords": ["maestro", "mvc", "framework", "express"],
+    "homepage": "https://github.com/OtaK/Maestro",
+    "license": "Apache 2.0",
+    "authors": [
+        {
+            "name": "Mathieu Amiot",
+            "email": "m.amiot@otak-arts.com",
+            "homepage": "http://mathieu-amiot.fr"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Maestro\\": "src/"
+        }
+    }
+}
