@@ -186,7 +186,9 @@
         {
             self::__sinst();
 
-            $this->_runInitializers();
+            $this
+                ->_runInitializers()
+                ->_importHelpers();
 
             $this->_router
                 ->batchMatch($this->_routes)
@@ -216,6 +218,18 @@
                 $initializer = include $initFile;
                 $initializer($this);
             }
+
+            return $this;
+        }
+
+        /**
+         * Auto-requires all found helpers
+         * @return self
+         */
+        private function _importHelpers()
+        {
+            foreach(glob(self::$_settings['app path'].'/helpers/*.php') as $helper)
+                require_once $helper;
 
             return $this;
         }
