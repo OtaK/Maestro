@@ -2,6 +2,7 @@
 
     namespace Maestro\HTTP;
 
+    use Maestro\Maestro;
     use Maestro\Utils\CookieSignature;
     use Maestro\Utils\HttpCommons;
 
@@ -182,6 +183,25 @@
         }
 
         /**
+         * @param $headers
+         * @return array
+         */
+        private function _parseRawHeaders($headers)
+        {
+            $headers = explode("\r\n", preg_replace('/\x0D\x0A[\x09\x20]+/', ' ', $headers));
+            $tmp = array();
+            foreach ($headers as $field)
+            {
+                $ret = explode(': ', $field);
+                if (count($ret) <= 1)
+                    continue;
+
+                $tmp[strtolower($ret[0])] = $ret[1];
+            }
+            return $tmp;
+        }
+
+        /**
          * Get website base URL
          * @return string
          */
@@ -228,6 +248,29 @@
                 return $this->query[$name];
 
             return $default;
+        }
+
+        /**
+         * Sends outgoing request with cURL
+         */
+        public function send()
+        {
+            $hwnd = curl_init($this->url);
+            curl_setopt_array($hwnd, array(
+                CURLOPT_HEADER => true,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_COOKIE => $this->_getCookieHeaders(),
+                CURLOPT_CUSTOMREQUEST => $this->method,
+                CURLOPT_HTTPHEADER => $this->_getHeaders(),
+                CURLOPT_POSTFIELDS => http_build_query($this->body)
+            ));
+            $ret = curl_exec($hwnd);
+            list($headers, $body) = explode("\r\n\r\n", $ret, 2);
+            $response = new Response();
+            $response->set($this->_parseRawHeaders($headers));
+            $response->body = $this->_parseString($body, $response->get('content-type'));
+            return $response;
         }
 
         /**
@@ -312,5 +355,55 @@
         {
             if (isset($this->_containers[$offset]))
                 unset($this->_containers[$offset]);
+        }
+
+        /**
+         * @return string
+         */
+        private function _getCookieHeaders()
+        {
+            $ret = '';
+            foreach ($this->cookies as $cn => $c)
+            {
+                if ($c['val'] === null)
+                    continue;
+
+                $cData = array(
+                    'cookies' => array(
+                        $cn => $c['signed'] ? $this->_cookieParser->sign($c['val']) : $c['val']
+                    ),
+                    'expires' => date('r', time() + (isset($c['expire']) ? $c['expire'] : Maestro::gi()->get('cookie expire'))),
+                    'path' => '/'
+                );
+
+                if ($this->secure)
+                    $cData['secure'] = true;
+
+                $ret .= http_build_cookie($cData).', ';
+            }
+
+            return substr($ret, 0, -2);
+        }
+
+        /**
+         * @return array
+         */
+        private function _getHeaders()
+        {
+            $getHeader = function($name, $content) {
+                return str_replace(' ', '-', ucwords(str_replace('-', ' ', $name))) . ': ' . $content;
+            };
+
+            $ret = array();
+            foreach ($this->headers as $h => $content)
+            {
+                if (is_array($content))
+                    foreach ($content as $c)
+                        $ret[] = $getHeader($h, $c);
+                else
+                    $ret[] = $getHeader($h, $content);
+            }
+
+            return $ret;
         }
     }
