@@ -15,6 +15,8 @@
     {
         /** @var array - Locals data array */
         public $locals;
+        /** @var string - Response body, used only with incoming responses */
+        public $body;
         /** @var int - HTTP Response status code */
         protected $_statusCode;
         /** @var array - Response Headers array */
@@ -311,7 +313,8 @@
             $this->_sendHeaders();
 
             // And now send response body if any
-            if (HttpStatusCode::NO_CONTENT !== $this->_statusCode) // 204 = No Content
+            if (HttpStatusCode::NO_CONTENT !== $this->_statusCode // 204 = No Content
+            && $this->_renderer instanceof Renderer)
                 $this->_renderer->render($data ? : array());
 
             return $this;
@@ -324,13 +327,14 @@
          */
         private function _outputHeader($field, $content)
         {
-            header(str_replace(' ', '-', ucwords(str_replace('-', ' ', $field))) . ': ' . $content);
+            header(str_replace(' ', '-', ucwords(str_replace('-', ' ', $field))) . ': ' . $content, true);
         }
 
         /**
          * Load a renderer of a given type - acts as a getter if no param given
          * Returns self if no param
          * @param string|null $type
+         * @throws \Exception
          * @return Renderer|Response|null
          */
         public function renderer($type = null)
@@ -339,6 +343,9 @@
                 return $this->_renderer;
 
             $class = Renderer::ClassFactory($type);
+            if (null === $class)
+                throw new \Exception('Maestro::Response::renderer() - Specified Renderer ['.$type.'] does not exist');
+
             if (!($this->_renderer instanceof $class))
                 $this->_renderer = new $class();
 
@@ -347,11 +354,12 @@
 
         private function _sendHeaders()
         {
+            // Std headers
             foreach (array_merge(
                 $this->_headers,
                 array(
-                    'links'        => $this->_links,
-                    'x-powered-by' => $this->__poweredBy ? 'Maestro' : '<script>while(1)window.open(\'http://nobrain.dk\');</script>'
+                    'x-powered-by' => $this->__poweredBy ? 'Maestro' : '<script>while(1)window.open(\'http://nobrain.dk\');</script>',
+                    'server'       => 'Maybe Apache, maybe Nginx, guess...'
                 )
             ) as $h => $content)
             {
@@ -362,6 +370,12 @@
                     $this->_outputHeader($h, $content);
             }
 
+
+            // Link headers
+            foreach ($this->_links as $rel => $link)
+                $this->_outputHeader('link', "<{$link['url']}>; rel=\"{$rel}\"");
+
+            // SetCookie ones
             foreach ($this->_cookies as $cn => $c)
             {
                 if ($c['val'] === null)
