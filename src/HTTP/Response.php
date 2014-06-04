@@ -53,10 +53,13 @@
         /**
          * Sets current response status code
          * @param $code
-         * @return self
+         * @return self|int
          */
-        public function status($code)
+        public function status($code = null)
         {
+            if ($code === null)
+                return $this->_statusCode;
+
             $this->_statusCode = $code;
 
             return $this;
