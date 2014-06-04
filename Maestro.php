@@ -19,8 +19,6 @@
      */
     class Maestro
     {
-        const DEBUG = true;
-
         /** @var Maestro|null - Singleton */
         static private $_instance = null;
 
@@ -74,6 +72,7 @@
                 self::$_settings                         = new Settings();
                 self::$_settings['view engine']          = 'php';
                 self::$_settings['app path']             = __DIR__ . '/Tests/';
+                self::$_settings['env']                  = 'development';
                 self::$_settings['controller namespace'] = '\\';
             }
         }

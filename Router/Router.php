@@ -89,14 +89,13 @@
         {
             $routes = $this->_routes;
 
-            $this->_dispatcher = \FastRoute\cachedDispatcher(function (RouteCollector $routeCollector) use ($routes)
-            {
+            $this->_dispatcher = \FastRoute\cachedDispatcher(function (RouteCollector $routeCollector) use ($routes) {
                 foreach ($routes as &$r)
                     foreach ($r['verbs'] as $verb => $handler)
                         $routeCollector->addRoute($verb, $r['pattern'], $handler);
             }, array(
                 'cacheFile'     => self::CACHE_FILE_LOCATION,
-                'cacheDisabled' => Maestro::DEBUG
+                'cacheDisabled' => 'development' === Maestro::gi()->get('env')
             ));
 
             return $this;
