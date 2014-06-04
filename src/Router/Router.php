@@ -110,7 +110,7 @@
             if ($this->_dispatcher === null)
                 throw new \Exception('Maestro::Router - Dispatcher not initialized!');
 
-            $result     = $this->_dispatcher->dispatch($this->_req->method, $this->_req->uri);
+            $result     = $this->_dispatcher->dispatch($this->_req->method, $this->_req->path);
             $this->_res = new Response();
 
             switch ($result[0])
