@@ -32,6 +32,7 @@
             {
                 $reflection = new \ReflectionClass(get_called_class());
                 static::$_consts = $reflection->getConstants();
+                unset(static::$_consts['__default']);
             }
 
             return static::$_consts;
