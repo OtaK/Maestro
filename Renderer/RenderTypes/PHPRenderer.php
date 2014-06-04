@@ -46,12 +46,11 @@
          */
         public function render($vars = array())
         {
-            if (is_array($vars))
-                $this->_data = array_merge($this->_data, $vars);
+            $this->_data = is_array($vars) ? array_merge($this->_data, $vars) : $vars;
 
             if ($this->raw)
             {
-                echo $vars;
+                echo $this->_data;
                 return;
             }
 
@@ -65,7 +64,6 @@
         /**
          * @return mixed
          */
-        /** @noinspection PhpUnusedPrivateMethodInspection */
         private function _yield()
         {
             return $this->__action;

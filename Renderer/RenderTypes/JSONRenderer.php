@@ -1,8 +1,8 @@
 <?php
 
     namespace Maestro\Renderer\RenderTypes;
-
     use Maestro\Renderer\Renderer;
+
 
     /**
      * Class JSONRenderer
@@ -16,7 +16,7 @@
          */
         public function render($vars = array())
         {
-            $this->_data = array_merge($this->_data, $vars);
+            $this->_data = is_array($vars) ? array_merge($this->_data, $vars) : $vars;
             echo json_encode($this->_data);
         }
     }
