@@ -33,7 +33,17 @@
          */
         static protected function _parseString($string, $contentType)
         {
-            switch ($contentType)
+            $tmp = explode('; ', $contentType);
+            $type = $tmp[0];
+            if (count($tmp) > 1)
+                list(, $charset) = explode('=', $tmp[1]);
+            else
+                $charset = 'UTF-8';
+
+            $inferred = mb_detect_encoding($string, null, true);
+            $string = mb_convert_encoding($string, 'UTF-8', $inferred !== false ? $inferred : $charset);
+
+            switch ($type)
             {
                 case self::MIME_JSON:
                     return json_decode($string, true);
@@ -43,7 +53,8 @@
                     $ret = null;
                     parse_str($string, $ret);
                     return $ret;
+                default:
+                    return $string;
             }
-            return null;
         }
     }
