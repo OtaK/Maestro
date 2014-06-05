@@ -68,12 +68,6 @@
         {
             $this->_cookieParser = new CookieSignature();
 
-            if ($autoInit)
-            {
-                $this->refresh();
-                return;
-            }
-
             $this->method  = self::HTTP_VERB_GET;
             $this->params  = array();
             $this->body    = array();
@@ -87,7 +81,7 @@
             $this->path     = '/';
             $this->protocol = self::PROTOCOL_HTTP;
 
-            $this->contentType   = 'text/html';
+            $this->contentType   = self::MIME_HTML;
             $this->cookies       = array();
             $this->signedCookies = array();
             $this->xhr           = false;
@@ -95,6 +89,9 @@
             $this->secure        = false;
             $this->ip            = '127.0.0.1';
             $this->ips           = array($this->ip);
+
+            if ($autoInit)
+                $this->refresh();
         }
 
         /**
