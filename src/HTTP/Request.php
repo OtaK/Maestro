@@ -256,7 +256,7 @@
          */
         public function send()
         {
-            $hwnd = curl_init($this->url);
+            $hwnd = curl_init($this->url . (count($this->query) > 0 ? '?'.http_build_query($this->query) : ''));
             curl_setopt_array($hwnd, array(
                 CURLOPT_HEADER => true,
                 CURLOPT_RETURNTRANSFER => true,
