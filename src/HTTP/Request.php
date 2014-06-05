@@ -190,9 +190,22 @@
         private function _parseRawHeaders($headers)
         {
             $headers = explode("\r\n", preg_replace('/\x0D\x0A[\x09\x20]+/', ' ', $headers));
-            $tmp = array();
-            foreach ($headers as $field)
+            $tmp = array(
+                'http'    => array(),
+                'headers' => array()
+            );
+            foreach ($headers as $i => $field)
             {
+                if (0 === $i) // 1st line is http status code
+                {
+                    list(
+                        $tmp['http']['spec'],
+                        $tmp['http']['status'],
+                        $tmp['http']['status_text']
+                    ) = explode(' ', $field);
+                    continue;
+                }
+
                 $ret = explode(': ', $field);
                 if (count($ret) <= 1)
                     continue;
@@ -268,8 +281,10 @@
             ));
             $ret = curl_exec($hwnd);
             list($headers, $body) = explode("\r\n\r\n", $ret, 2);
+            $rawHeaders = $this->_parseRawHeaders($headers);
             $response = new Response();
-            $response->set($this->_parseRawHeaders($headers));
+            $response->set($rawHeaders['headers']);
+            $response->status($rawHeaders['http']['status']);
             $response->body = $this->_parseString($body, $response->get('content-type'));
             return $response;
         }
