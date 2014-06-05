@@ -2,6 +2,8 @@
 
     namespace Maestro;
 
+    require_once __DIR__.'/vendor/autoload.php';
+
     use Maestro\HTTP\Request;
     use Maestro\Renderer\Renderer;
     use Maestro\Router\Router;

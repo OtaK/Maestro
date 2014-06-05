@@ -37,7 +37,7 @@
         /**
          * @param array $locals
          */
-        function __construct($locals = array())
+        public function __construct($locals = array())
         {
             $this->locals      = $locals;
             $this->_statusCode = HttpStatusCode::OK;

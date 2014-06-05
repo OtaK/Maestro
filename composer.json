@@ -11,6 +11,9 @@
             "homepage": "http://mathieu-amiot.fr"
         }
     ],
+    "require": {
+        "jeremeamia/superclosure": "~1.0"
+    },
     "autoload": {
         "psr-4": {
             "Maestro\\": "src/"

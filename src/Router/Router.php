@@ -12,6 +12,7 @@
     use FastRoute\BadRouteException;
     use FastRoute\Dispatcher;
     use FastRoute\RouteCollector;
+    use Jeremeamia\SuperClosure\SerializableClosure;
 
     /**
      * Class Router
@@ -116,11 +117,11 @@
             switch ($result[0])
             {
                 case Dispatcher::NOT_FOUND:
-                    $this->_res->send(404);
+                    $this->_res->send(HttpStatusCode::NOT_FOUND);
                     break;
                 case Dispatcher::METHOD_NOT_ALLOWED:
                     $this->_res->set('allow', implode(', ', $result[1]));
-                    $this->_res->send(405);
+                    $this->_res->send(HttpStatusCode::METHOD_NOT_ALLOWED);
                     break;
                 case Dispatcher::FOUND:
                     list(, $handler, $vars) = $result;
@@ -151,7 +152,7 @@
 
                     if (!class_exists($class))
                     {
-                        $this->_res->send(500);
+                        $this->_res->send(HttpStatusCode::INTERNAL_SERVER_ERROR);
                         throw new \Exception('Controller Class not found! ['.$class.']');
                     }
 
@@ -163,7 +164,7 @@
 
                     if (!method_exists($controller, $method))
                     {
-                        $this->_res->send(500);
+                        $this->_res->send(HttpStatusCode::INTERNAL_SERVER_ERROR);
                         break;
                     }
 
@@ -312,6 +313,9 @@
                 if (is_string($handler))
                     $handler = $this->_prefix . '/' . $handler;
             }
+
+            if ($handler instanceof \Closure) // Serializable closures support
+                $handler = new SerializableClosure($handler);
 
             $verbs = array_flip($verbs);
             foreach ($verbs as &$v)
