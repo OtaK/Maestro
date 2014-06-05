@@ -21,8 +21,10 @@
 
         /** @var string - HTTP Method used */
         public $method;
-        /** @var array - Query params assoc array */
+        /** @var array - Route params assoc array */
         public $params;
+        /** @var array - Query params assoc array */
+        public $query;
         /** @var array - Parsed request body */
         public $body;
         /** @var array - Headers assoc array, lowercase normalized header names */
@@ -35,8 +37,6 @@
         public $host;
         /** @var string - Path component */
         public $path;
-        /** @var string - Raw query */
-        public $query;
         /** @var string - Protocol/scheme used (http/https/etc) */
         public $protocol;
         /** @var string - User agent field */
@@ -78,12 +78,12 @@
             $this->params  = array();
             $this->body    = array();
             $this->headers = array();
+            $this->query    = array();
 
             $this->ua       = '';
             $this->url      = 'http://localhost';
             $this->uri      = 'http://localhost';
             $this->host     = 'localhost';
-            $this->query    = '';
             $this->path     = '/';
             $this->protocol = self::PROTOCOL_HTTP;
 
@@ -134,7 +134,11 @@
             else
                 $this->ips = array($this->ip);
 
-            parse_str($this->query, $this->params);
+            if ($this->query !== null)
+                parse_str($this->query, $this->query);
+            else
+                $this->query = array();
+
             $this->body    = $this->_requestBody();
 
             return $this;
