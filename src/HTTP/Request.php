@@ -210,7 +210,7 @@
                 if (count($ret) <= 1)
                     continue;
 
-                $tmp[strtolower($ret[0])] = $ret[1];
+                $tmp['headers'][strtolower($ret[0])] = $ret[1];
             }
             return $tmp;
         }
