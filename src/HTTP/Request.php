@@ -152,10 +152,8 @@
             {
                 case self::HTTP_VERB_PUT:
                 case self::HTTP_VERB_DELETE:
-                    $data = parent::_parseString(file_get_contents('php://input'), $this->contentType);
-                    break;
                 case self::HTTP_VERB_POST:
-                    $data = $_POST;
+                    $data = parent::_parseString(file_get_contents('php://input'), $this->contentType);
                     break;
                 case self::HTTP_VERB_GET:
                     $data = $_GET;
