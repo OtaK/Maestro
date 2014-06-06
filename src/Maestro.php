@@ -189,8 +189,8 @@
             self::__sinst();
 
             $this
-                ->_runInitializers()
-                ->_importHelpers();
+                ->_importHelpers()
+                ->_runInitializers();
 
             $this->_router
                 ->batchMatch($this->_routes)
