@@ -128,7 +128,7 @@
 
                     $this->_req->params = array_merge($this->_req->params, $vars);
 
-                    if ($handler instanceof \Closure) // Simple closure
+                    if ($handler instanceof \Closure || $handler instanceof \Jeremeamia\SuperClosure\SerializableClosure) // Simple closure
                     {
                         $this->_res->locals = self::_invokeClosureWithParams($this, $handler);
                         break;
