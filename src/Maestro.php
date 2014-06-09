@@ -2,7 +2,8 @@
 
     namespace Maestro;
 
-    require_once __DIR__.'/vendor/autoload.php';
+    if (file_exists(__DIR__.'/../vendor/autoload.php'))
+        require_once __DIR__.'/../vendor/autoload.php';
 
     use Maestro\HTTP\Request;
     use Maestro\Renderer\Renderer;
