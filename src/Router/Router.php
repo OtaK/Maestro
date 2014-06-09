@@ -128,7 +128,8 @@
 
                     $this->_req->params = array_merge($this->_req->params, $vars);
 
-                    if ($handler instanceof \Closure || $handler instanceof \Jeremeamia\SuperClosure\SerializableClosure) // Simple closure
+                    if ($handler instanceof \Closure 
+                    || $handler instanceof \Jeremeamia\SuperClosure\SerializableClosure) // Simple closure
                     {
                         $this->_res->locals = self::_invokeClosureWithParams($this, $handler);
                         break;
@@ -185,7 +186,7 @@
          * @param callable $closure
          * @return array
          */
-        static protected function _invokeClosureWithParams(Router $ctx, \Closure $closure)
+        static protected function _invokeClosureWithParams(Router $ctx, $closure)
         {
             // Inject req and res
             return $closure($ctx->_req, $ctx->_res);
