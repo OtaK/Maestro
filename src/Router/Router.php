@@ -9,6 +9,7 @@
     use Maestro\HTTP\Response;
     use Maestro\Maestro;
     use Maestro\Utils\HttpCommons;
+    use Maestro\Utils\HttpStatusCode;
     use FastRoute\BadRouteException;
     use FastRoute\Dispatcher;
     use FastRoute\RouteCollector;
