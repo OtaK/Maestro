@@ -191,6 +191,7 @@
 
             $this
                 ->_importHelpers()
+                ->_importModels()
                 ->_runInitializers();
 
             $this->_router
@@ -233,6 +234,18 @@
         {
             foreach(glob(self::$_settings['app path'].'/../helpers/*.php') as $helper)
                 require_once $helper;
+
+            return $this;
+        }
+
+        /**
+         * Auto-requires all found helpers
+         * @return self
+         */
+        private function _importModels()
+        {
+            foreach(glob(self::$_settings['app path'].'/models/*.php') as $model)
+                require_once $model;
 
             return $this;
         }
