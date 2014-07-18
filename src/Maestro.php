@@ -70,14 +70,14 @@
          */
         private static function __sinst()
         {
-            if (self::$_settings === null)
-            {
-                self::$_settings                         = new Settings();
-                self::$_settings['view engine']          = 'php';
-                self::$_settings['app path']             = __DIR__ . '/Tests/';
-                self::$_settings['env']                  = 'development';
-                self::$_settings['controller namespace'] = '\\';
-            }
+            if (self::$_settings !== null)
+                return;
+
+            self::$_settings                         = new Settings();
+            self::$_settings['view engine']          = 'php';
+            self::$_settings['app path']             = __DIR__ . '/Tests/';
+            self::$_settings['env']                  = 'development';
+            self::$_settings['controller namespace'] = '\\';
         }
 
         /**
