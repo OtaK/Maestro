@@ -264,8 +264,10 @@
 
         /**
          * Sends outgoing request with cURL
+         * @param $options array - Options array
+         * @return \Maestro\HTTP\Response
          */
-        public function send()
+        public function send(array $options = array())
         {
             $hwnd = curl_init($this->url . (count($this->query) > 0 ? '?'.http_build_query($this->query) : ''));
             curl_setopt_array($hwnd, array(
@@ -277,7 +279,14 @@
                 CURLOPT_HTTPHEADER => $this->_getHeaders(),
                 CURLOPT_POSTFIELDS => http_build_query($this->body)
             ));
+
+            if (isset($options['bypass ssl ca']) && !!$options['bypass ssl ca'])
+                curl_setopt($hwnd, CURLOPT_SSL_VERIFYPEER, false);
+
             $ret = curl_exec($hwnd);
+            if ($ret === false)
+                $ret = "HTTP/1.1 400 Bad Request\r\n\r\n" . curl_error($hwnd);
+
             list($headers, $body) = explode("\r\n\r\n", $ret, 2);
             $rawHeaders = $this->_parseRawHeaders($headers);
             $response = new Response();
