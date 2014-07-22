@@ -23,6 +23,16 @@
     {
         const CACHE_FILE_LOCATION = '/tmp/maestro.routing.cache';
 
+        static private $RESOURCE_ROUTES = array(
+            'get'   => array(
+                '/' => 'index',
+                '/{id[0-9]+}' => 'show'
+            ),
+            'post'  => array('/' => 'create'),
+            'put'   => array('/{id[0-9]+}' => 'update'),
+            'del'   => array('/{id[0-9]+}' => 'destroy')
+        );
+
         /** @var array - Controller instanciation cache array */
         static private $__controllerCache = array();
 
@@ -288,6 +298,24 @@
             $this->_prefix = $path;
             $folderDef($this);
             $this->_prefix = null;
+        }
+
+        /**
+         * REST resource pattern generator
+         * @param string $pattern       - Base pattern for the resource (eg: /users)
+         * @param string $controller    - Controller name for the resource (eg: user)
+         * @param array  $without       - List of methods to exclude amongst index, create, update, show, delete
+         */
+        public function resource($pattern, $controller, array $without = array())
+        {
+            foreach (self::$RESOURCE_ROUTES as $verb => $handlers)
+            {
+                foreach ($handlers as $path => $method)
+                {
+                    if (in_array($method, $without, true)) continue;
+                    $this->{$verb}($pattern . $path, $controller . '#' . $method);
+                }
+            }
         }
 
         /**
