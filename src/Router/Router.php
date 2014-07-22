@@ -316,6 +316,8 @@
                     $this->{$verb}($pattern . $path, $controller . '#' . $method);
                 }
             }
+
+            return $this;
         }
 
         /**
