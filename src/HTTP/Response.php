@@ -206,7 +206,7 @@
 
 
         /**
-         * Streams a file
+         * Streams a file to the browser
          * @param $path
          * @param $options
          * @return self
@@ -216,18 +216,29 @@
             if (isset($options['root']))
                 $path = $options['root'] . '/' . $path;
 
-            $this->_statusCode = file_exists($path) ? HttpStatusCode::OK : HttpStatusCode::NOT_FOUND;
+            $found = file_exists($path);
+            $this->_statusCode = $found ? HttpStatusCode::OK : HttpStatusCode::NOT_FOUND;
 
-            $this->set('content-type', 'application/octet-stream');
-            $this->set('content-length', (string)$this->_statusCode === HttpStatusCode::OK ? filesize($path) : 0);
-            $this->set('content-description', 'File Transfer');
-            $this->set('content-disposition', 'attachement; filename='.basename($path));
-            $this->set('expires', '0');
-            $this->set('cache-control', 'must-revalidate');
-            $this->set('pragma', 'public');
+            if ($found)
+            {
+                $this->set('content-length', (string)$this->_statusCode === HttpStatusCode::OK ? filesize($path) : 0);
+                if (isset($options['download']) && $options['download'])
+                {
+                    $this->set('content-type', 'application/octet-stream');
+                    $this->set('content-description', 'File Transfer');
+                    $this->set('content-disposition', 'attachement; filename='.basename($path));
+                    $this->set('expires', '0');
+                    $this->set('cache-control', 'must-revalidate');
+                    $this->set('pragma', 'public');
+                }
+                else if (function_exists('finfo_open'))
+                {
+                    $finfo = new finfo(FILEINFO_MIME_TYPE);
+                    $this->set('content-type', $finfo->file($path));
+                }
+            }
 
             $this->renderer('file');
-
             $this->_end($path, $this->_statusCode);
 
             return $this;

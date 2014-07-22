@@ -321,6 +321,27 @@
         }
 
         /**
+         * Servs static files in folder $path
+         * @param string $path - Root of static assets
+         * @return self
+         */
+        public function assets($path)
+        {
+            return $this->get($path.'/*', __CLASS__.'::ServeAsset');
+        }
+
+        /**
+         * Router action to serve static files through Maestro
+         * @param Request $req
+         * @param Response $res
+         */
+        public static function ServeAsset(Request $req, Response $res)
+        {
+            $path = Maestro::gi()->get('app path') . '/../' . str_replace('.', '', $req->path);
+            $res->sendfile($path);
+        }
+
+        /**
          * @param $pattern
          * @param $handler
          * @return self
