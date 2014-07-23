@@ -329,7 +329,7 @@
         public function assets($path)
         {
             return $this->get($path.'/{path:.*}', function(Request $req, Response $res) {
-                $path = Maestro::gi()->get('app path') . '..' . str_replace('.', '', $req->path);
+                $path = Maestro::gi()->get('app path') . '..' . str_replace('..', '', $req->path);
                 $res->sendfile($path);
             });
         }
