@@ -2,6 +2,8 @@
 
     namespace Maestro\Renderer;
 
+    use Maestro\Maestro;
+
     /**
      * Class Renderer
      * @package Maestro\Renderer
