@@ -64,8 +64,8 @@
          */
         public function curRoute($controller, $action)
         {
-            $tmp = explode('\\', $controller);
-            $this->_controller = ucfirst(end($tmp));
+            $tmp = ltrim(str_replace(Maestro::gi()->get('controller namespace'), '', $controller), '\\');
+            $this->_controller = $tmp;
             $this->_action     = $action;
 
             return $this;

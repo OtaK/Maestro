@@ -25,7 +25,7 @@
         {
             parent::__construct($data);
             $this->_extension = 'phtml';
-            self::$_viewsPath = Maestro::gi()->get('app path').'/views/';
+            self::$_viewsPath = Maestro::gi()->get('app path').'/views';
             $this->raw = false;
         }
 
@@ -55,9 +55,16 @@
             }
 
             extract(array_merge(self::$_commons, $this->_data), EXTR_OVERWRITE|EXTR_REFS);
-            ob_start();
-            include self::$_viewsPath.'/'.$this->_controller.'/'.$this->_action.'.'.$this->_extension;
-            $this->__action = ob_get_clean();
+            $actionFile = self::$_viewsPath.'/'.$this->_controller.'/'.$this->_action.'.'.$this->_extension;
+            if (file_exists($actionFile))
+            {
+                ob_start();
+                include $actionFile;
+                $this->__action = ob_get_clean();
+            }
+            else
+                $this->__action = '';
+            
             include self::$_viewsPath.'/'.$this->_layout.'.'.$this->_extension;
         }
 
