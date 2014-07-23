@@ -16,6 +16,7 @@
          */
         public function render($path = '')
         {
-            readfile($path);
+            if (!empty($path))
+                readfile($path);
         }
     }

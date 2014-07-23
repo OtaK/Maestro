@@ -237,6 +237,8 @@
                     $this->set('content-type', $finfo->file($path));
                 }
             }
+            else
+                $path = null;
 
             $this->renderer('file');
             $this->_end($path, $this->_statusCode);
