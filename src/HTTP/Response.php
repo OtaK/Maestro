@@ -238,7 +238,7 @@
                 }
             }
             else
-                $path = null;
+                $path = '';
 
             $this->renderer('file');
             $this->_end($path, $this->_statusCode);
