@@ -233,7 +233,7 @@
                 }
                 else if (function_exists('finfo_open'))
                 {
-                    $finfo = new finfo(FILEINFO_MIME_TYPE);
+                    $finfo = new \finfo(FILEINFO_MIME_TYPE);
                     $this->set('content-type', $finfo->file($path));
                 }
             }
