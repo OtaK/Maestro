@@ -302,9 +302,10 @@
 
         /**
          * REST resource pattern generator
-         * @param string $pattern       - Base pattern for the resource (eg: /users)
-         * @param string $controller    - Controller name for the resource (eg: user)
-         * @param array  $without       - List of methods to exclude amongst index, create, update, show, destroy
+         * @param string $pattern    - Base pattern for the resource (eg: /users)
+         * @param string $controller - Controller name for the resource (eg: user)
+         * @param array  $without    - List of methods to exclude amongst index, create, update, show, destroy
+         * @return self
          */
         public function resource($pattern, $controller, array $without = array())
         {
