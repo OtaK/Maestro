@@ -327,18 +327,10 @@
          */
         public function assets($path)
         {
-            return $this->get($path.'/*', __CLASS__.'::ServeAsset');
-        }
-
-        /**
-         * Router action to serve static files through Maestro
-         * @param Request $req
-         * @param Response $res
-         */
-        public static function ServeAsset(Request $req, Response $res)
-        {
-            $path = Maestro::gi()->get('app path') . '/../' . str_replace('.', '', $req->path);
-            $res->sendfile($path);
+            return $this->get($path.'/{path}', function(Request $req, Response $res) {
+                $path = Maestro::gi()->get('app path') . '..' . str_replace('.', '', $req->path);
+                $res->sendfile($path);
+            });
         }
 
         /**
