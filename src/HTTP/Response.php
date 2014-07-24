@@ -6,6 +6,7 @@
     use Maestro\Renderer\Renderer;
     use Maestro\Utils\CookieSignature;
     use Maestro\Utils\HttpStatusCode;
+    use Maestro\Utils\MimeType;
 
     /**
      * Class Response
@@ -231,11 +232,8 @@
                     $this->set('cache-control', 'must-revalidate');
                     $this->set('pragma', 'public');
                 }
-                else if (function_exists('finfo_open'))
-                {
-                    $finfo = new \finfo(FILEINFO_MIME_TYPE);
-                    $this->set('content-type', $finfo->file($path));
-                }
+                else
+                    $this->set('content-type', MimeType::FileType($path));
             }
             else
                 $path = '';
