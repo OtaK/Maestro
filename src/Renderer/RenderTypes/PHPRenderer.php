@@ -2,8 +2,19 @@
 
     namespace Maestro\Renderer\RenderTypes;
 
+    use Exception;
     use Maestro\Maestro;
     use Maestro\Renderer\Renderer;
+
+    class PHPRendererLayoutNotFound extends \Exception
+    {
+        public function __construct($path)
+        {
+            parent::__construct("Template file not found at $path when constructing response");
+        }
+    }
+
+    class PHPRendererActionNotFound extends PHPRendererLayoutNotFound {}
 
     /**
      * Class PHPRenderer
@@ -43,6 +54,8 @@
          * Renders using PHP's default template engine: PHP itself.
          * Override if you need something else.
          * @param array $vars New variables to merge just in time
+         * @throws PHPRendererLayoutNotFound
+         * @throws PHPRendererActionNotFound
          */
         public function render($vars = array())
         {
@@ -55,7 +68,7 @@
             }
 
             extract(array_merge(self::$_commons, $this->_data), EXTR_OVERWRITE|EXTR_REFS);
-            $actionFile = self::$_viewsPath.'/'.$this->_controller.'/'.$this->_action.'.'.$this->_extension;
+            $actionFile = self::$_viewsPath.'/'.strtolower($this->_controller).'/'.$this->_action.'.'.$this->_extension;
             if (file_exists($actionFile))
             {
                 ob_start();
@@ -63,9 +76,13 @@
                 $this->__action = ob_get_clean();
             }
             else
-                $this->__action = '';
-            
-            include self::$_viewsPath.'/'.$this->_layout.'.'.$this->_extension;
+                throw new PHPRendererActionNotFound($actionFile);
+
+            $layoutFile = self::$_viewsPath.'/'.$this->_layout.'.'.$this->_extension;
+            if (!file_exists($layoutFile))
+                throw new PHPRendererLayoutNotFound($layoutFile);
+
+            include $layoutFile;
         }
 
         /**
