@@ -151,7 +151,7 @@
                         $tmp = $this->_parseHandler($handler, '::');
 
                     if ($tmp === null)
-                        throw new BadRouteException('Impossible to parse given handler string [' . $handler . ']');
+                        throw new BadRouteException("Impossible to parse given handler string [$handler]");
 
                     list($class, $method) = $tmp;
 
@@ -165,7 +165,7 @@
                     if (!class_exists($class))
                     {
                         $this->_res->send(HttpStatusCode::INTERNAL_SERVER_ERROR);
-                        throw new \Exception('Controller Class not found! ['.$class.']');
+                        throw new \Exception("Controller [$class] not found!");
                     }
 
                     $controller      = self::_cachedController($class);
@@ -177,7 +177,7 @@
                     if (!method_exists($controller, $method))
                     {
                         $this->_res->send(HttpStatusCode::INTERNAL_SERVER_ERROR);
-                        break;
+                        throw new \Exception("Method $class::[$method] not found");
                     }
 
                     $this->_controller = $class;
@@ -329,7 +329,7 @@
         public function assets($path)
         {
             return $this->get($path.'/{path:.*}', function(Request $req, Response $res) {
-                $path = Maestro::gi()->get('app path') . '..' . str_replace('..', '', $req->path);
+                $path = Maestro::gi()->get('base path') . str_replace('..', '', $req->path);
                 $res->sendfile($path);
             });
         }
