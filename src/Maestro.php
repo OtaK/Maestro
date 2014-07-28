@@ -216,7 +216,7 @@
          */
         private function _runInitializers()
         {
-            foreach(glob(self::$_settings['app path'].'/../config/initializers/*.php') as $initFile)
+            foreach (glob(self::$_settings['app path'].'/../config/initializers/*.php') as $initFile)
             {
                 /** @var \Closure $initializer */
                 $initializer = include $initFile;
@@ -232,7 +232,7 @@
          */
         private function _importHelpers()
         {
-            foreach(glob(self::$_settings['app path'].'/../helpers/*.php') as $helper)
+            foreach (glob(self::$_settings['app path'].'/../helpers/*.php') as $helper)
                 require_once $helper;
 
             return $this;
