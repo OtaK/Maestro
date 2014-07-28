@@ -16,7 +16,7 @@
     {
         /** @var array - Locals data array */
         public $locals;
-        /** @var string - Response body, used only with incoming responses */
+        /** @var string - Response body */
         public $body;
         /** @var int - HTTP Response status code */
         protected $_statusCode;
@@ -41,6 +41,7 @@
         public function __construct($locals = array())
         {
             $this->locals      = $locals;
+            $this->body        = null;
             $this->_statusCode = HttpStatusCode::OK;
             $this->_headers    = array();
             $this->_links      = array();
@@ -301,14 +302,10 @@
             $this->_statusCode = $status;
             $this->__locked    = true;
             $tst = HttpStatusCode::Text($status);
-            if ($body === null)
-                $body = $tst;
-
-            if (is_string($body) && !isset($this->_headers['content-length']))
-                $this->set('content-length', strlen($body));
+            if (is_array($body))
+                $this->locals = array_merge($this->locals, $body);
 
             header('HTTP/1.1 ' . $status . ' ' . $tst, true, $status);
-            $this->render($body);
         }
 
         /**
@@ -319,7 +316,7 @@
         public function render($data = null)
         {
             if (is_array($data))
-                $data = array_merge($data, $this->locals);
+                $this->locals = array_merge($this->locals, $data);
             else
                 $this->_renderer->raw = true;
 
@@ -329,7 +326,15 @@
             // And now send response body if any
             if (HttpStatusCode::NO_CONTENT !== $this->_statusCode // 204 = No Content
             && $this->_renderer instanceof Renderer)
-                $this->_renderer->render($data ? : array());
+            {
+                $len = $this->_renderer->render($this->locals);
+                if ($len === 0)
+                {
+                    $tst = HttpStatusCode::Text($this->_statusCode);
+                    $len = strlen($tst);
+                }
+                $this->set('content-length', $len);
+            }
 
             return $this;
         }
@@ -349,7 +354,7 @@
          * Returns self if no param
          * @param string|null $type
          * @throws \Exception
-         * @return Renderer|Response|null
+         * @return Renderer|self
          */
         public function renderer($type = null)
         {
@@ -358,7 +363,7 @@
 
             $class = Renderer::ClassFactory($type);
             if (null === $class)
-                throw new \Exception('Maestro::Response::renderer() - Specified Renderer ['.$type.'] does not exist');
+                throw new \Exception('Maestro\\Response::renderer() - Specified Renderer ['.$type.'] does not exist');
 
             if (!($this->_renderer instanceof $class))
                 $this->_renderer = new $class();
@@ -366,6 +371,9 @@
             return $this;
         }
 
+        /**
+         * @return self
+         */
         private function _sendHeaders()
         {
             // Std headers
@@ -383,7 +391,6 @@
                 else
                     $this->_outputHeader($h, $content);
             }
-
 
             // Link headers
             foreach ($this->_links as $rel => $link)
@@ -406,6 +413,8 @@
                     );
                 }
             }
+
+            return $this;
         }
 
         /**

@@ -190,17 +190,27 @@
         {
             self::__sinst();
 
+            if ($this->enabled('enable xhprof') && function_exists('xhprof_enable'))
+                xhprof_enable(XHPROF_FLAGS_CPU|XHPROF_FLAGS_MEMORY);
+
             $this
                 ->_importHelpers()
                 ->_importModels()
                 ->_runInitializers();
 
-            $this->_router
+            $response = $this->_router
                 ->batchMatch($this->_routes)
                 ->init()
                 ->assignRequest(new Request(true))
                 ->assignControllerNamespace($this->get('controller namespace'))
                 ->drive();
+
+            $additionalData = array();
+
+            if ($this->enabled('enable xhprof') && function_exists('xhprof_disable'))
+                $additionalData = array_merge($additionalData, array('_profiling' => xhprof_disable()));
+
+            $response->render($additionalData);
         }
 
         /**
