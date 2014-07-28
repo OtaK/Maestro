@@ -11,7 +11,8 @@
         private static $_mapExtensions = array(
             'css'  => 'text/css',
             'js'   => 'application/javascript',
-            'html' => 'text/html'
+            'html' => 'text/html',
+            'csv'  => 'text/csv'
         );
 
         public static function FileType($path)
