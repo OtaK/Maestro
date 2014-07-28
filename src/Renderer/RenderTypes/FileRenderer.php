@@ -22,10 +22,10 @@
          */
         protected function _render($path = '')
         {
-            if (!empty($path))
-            {
-                readfile($path);
-                return filesize($path);
-            }
+            if (empty($path))
+                return 0;
+
+            readfile($path);
+            return filesize($path);
         }
     }
