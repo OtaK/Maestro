@@ -14,7 +14,7 @@
          * Render function.
          * @param string $path file path to render
          */
-        public function render($path = '')
+        protected function _render($path = '')
         {
             if (!empty($path))
                 readfile($path);

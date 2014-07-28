@@ -57,7 +57,7 @@
          * @throws PHPRendererLayoutNotFound
          * @throws PHPRendererActionNotFound
          */
-        public function render($vars = array())
+        protected function _render($vars = array())
         {
             $this->_data = is_array($vars) ? array_merge($this->_data, $vars) : $vars;
 

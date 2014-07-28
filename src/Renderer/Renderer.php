@@ -112,6 +112,21 @@
         /**
          * Render function.
          * @param array|mixed $vars New variables to merge just in time
+         * @return int - Length of content just echoed
          */
-        abstract public function render($vars = array());
+        final public function render($vars = array())
+        {
+            ob_start();
+            $this->_render($vars);
+            $buf = ob_get_clean();
+            $len = strlen($buf);
+            echo $buf;
+            return $len;
+        }
+
+        /**
+         * Private function to override by renderers
+         * @param array $vars
+         */
+        abstract protected function _render($vars = array());
     }
