@@ -114,7 +114,7 @@
          * @param array|mixed $vars New variables to merge just in time
          * @return int - Length of content just echoed
          */
-        final public function render($vars = array())
+        public function render($vars = array())
         {
             ob_start();
             $this->_render($vars);
