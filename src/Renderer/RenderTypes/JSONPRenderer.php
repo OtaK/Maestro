@@ -10,6 +10,7 @@
      */
     class JSONPRenderer extends Renderer
     {
+        const CONTENT_TYPE = 'text/javascript';
         public $callback;
 
         /**

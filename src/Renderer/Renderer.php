@@ -10,6 +10,7 @@
      */
     abstract class Renderer implements \ArrayAccess
     {
+        const CONTENT_TYPE = null;
         protected $_data;
         protected $_controller;
         protected $_action;

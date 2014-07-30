@@ -22,6 +22,7 @@
      */
     class PHPRenderer extends Renderer
     {
+        const CONTENT_TYPE = 'text/html';
         static protected $_commons = array();
         static protected $_viewsPath;
         protected $_layout;

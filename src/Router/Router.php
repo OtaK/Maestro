@@ -141,7 +141,13 @@
             $this->_res = new Response();
             
             if ($this->_defaultRenderer !== null)
+            {
                 $this->_res->renderer($this->_defaultRenderer);
+                $rendererClass = get_class($this->_res->renderer());
+                $ct = $rendererClass::CONTENT_TYPE;
+                if ($ct !== null)
+                    $this->_res->set('content-type', $ct);
+            }
 
             switch ($result[0])
             {

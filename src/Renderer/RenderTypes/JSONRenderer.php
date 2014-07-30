@@ -10,6 +10,7 @@
      */
     class JSONRenderer extends Renderer
     {
+        const CONTENT_TYPE = 'application/json';
         /**
          * Render function.
          * @param array $vars New variables to merge just in time
