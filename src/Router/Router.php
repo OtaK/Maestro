@@ -169,8 +169,8 @@
                     }
 
                     $controller      = self::_cachedController($class);
-                    $controller->req = $this->_req;
-                    $controller->res = $this->_res;
+                    $controller->req = &$this->_req;
+                    $controller->res = &$this->_res;
                     $controller->app = Maestro::gi();
                     $controller->init();
 
