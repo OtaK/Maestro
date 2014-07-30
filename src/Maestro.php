@@ -203,6 +203,7 @@
                 ->init()
                 ->assignRequest(new Request(true))
                 ->assignControllerNamespace($this->get('controller namespace'))
+                ->defaultRenderer($this->get('render') ?: 'php')
                 ->drive();
 
             $additionalData = array();
