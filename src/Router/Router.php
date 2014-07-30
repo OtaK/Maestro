@@ -25,12 +25,12 @@
 
         static private $RESOURCE_ROUTES = array(
             'get'   => array(
-                '/' => 'index',
-                '/{id[0-9]+}' => 'show'
+                'index' => '',
+                'show' => '/{id[0-9]+}'
             ),
-            'post'  => array('/' => 'create'),
-            'put'   => array('/{id[0-9]+}' => 'update'),
-            'del'   => array('/{id[0-9]+}' => 'destroy')
+            'post'  => array('create' => ''),
+            'put'   => array('update' => '/{id[0-9]+}' ),
+            'del'   => array('destroy' => '/{id[0-9]+}')
         );
 
         /** @var array - Controller instanciation cache array */
@@ -311,7 +311,7 @@
         {
             foreach (self::$RESOURCE_ROUTES as $verb => $handlers)
             {
-                foreach ($handlers as $path => $method)
+                foreach ($handlers as $method => $path)
                 {
                     if (in_array($method, $without, true)) continue;
                     $this->{$verb}($pattern . $path, $controller . '#' . $method);
