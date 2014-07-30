@@ -177,8 +177,11 @@
             if (file_exists($body))
                 return $this->sendfile($body);
 
-            $this->set('content-type', 'text/html', false);
-            $this->renderer('php');
+            if ($this->_renderer === null) 
+            {
+                $this->set('content-type', 'text/html');
+                $this->renderer('php');
+            }
 
             $this->_end($body, $this->_statusCode);
 
