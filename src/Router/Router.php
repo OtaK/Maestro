@@ -36,6 +36,8 @@
         /** @var array - Controller instanciation cache array */
         static private $__controllerCache = array();
 
+        /** @var string - Default response renderer */
+        protected $_defaultRenderer;
         /** @var string - Controllers base namespace */
         protected $_controllerNamespace;
         /** @var string - Controller name */
@@ -65,6 +67,19 @@
             $this->_action              = null;
             $this->_prefix              = null;
             $this->_controllerNamespace = null;
+            $this->_defaultRenderer     = null;
+        }
+
+        /**
+         * Sets default renderer for all responses throughout app
+         * @param string $renderer
+         * @return self
+         */
+        public function defaultRenderer($renderer)
+        {
+            $this->_defaultRenderer = $renderer;
+
+            return $this;
         }
 
         /**
@@ -124,6 +139,9 @@
 
             $result     = $this->_dispatcher->dispatch($this->_req->method, $this->_req->path);
             $this->_res = new Response();
+            
+            if ($this->_defaultRenderer !== null)
+                $this->_res->renderer($this->_defaultRenderer);
 
             switch ($result[0])
             {
