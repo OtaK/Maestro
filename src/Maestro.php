@@ -78,7 +78,7 @@
             self::$_settings['app path']             = __DIR__ . '/Tests/';
             self::$_settings['env']                  = 'development';
             self::$_settings['controller namespace'] = '\\';
-            self::$_settings['base path']            = $_SERVER['SCRIPT_FILENAME'];
+            self::$_settings['base path']            = dirname($_SERVER['SCRIPT_FILENAME']);
         }
 
         /**
