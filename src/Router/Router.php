@@ -183,8 +183,8 @@
                     $this->_controller = $class;
                     $this->_action     = $method;
 
-                    $this->_res->renderer()->curRoute($this->_controller, $this->_action);
                     $this->_res->locals = self::_invokeMethodWithParams($controller, $method, $vars);
+                    $this->_res->renderer()->curRoute($this->_controller, $this->_action);
                     break;
             }
 
