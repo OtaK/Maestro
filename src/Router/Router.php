@@ -26,11 +26,11 @@
         static private $RESOURCE_ROUTES = array(
             'get'   => array(
                 'index' => '',
-                'show' => '/{id[0-9]+}'
+                'show' => '/{id:[0-9]+}'
             ),
             'post'  => array('create' => ''),
-            'put'   => array('update' => '/{id[0-9]+}' ),
-            'del'   => array('destroy' => '/{id[0-9]+}')
+            'put'   => array('update' => '/{id:[0-9]+}' ),
+            'del'   => array('destroy' => '/{id:[0-9]+}')
         );
 
         /** @var array - Controller instanciation cache array */
