@@ -5,6 +5,7 @@
     use Maestro\Maestro;
     use Maestro\Utils\CookieSignature;
     use Maestro\Utils\HttpCommons;
+    use Maestro\Utils\HttpStatusCode;
 
     /**
      * Class Request
@@ -201,6 +202,10 @@
                         $tmp['http']['status'],
                         $tmp['http']['status_text']
                     ) = explode(' ', $field);
+
+                    // Cast it, k
+                    settype($tmp['http']['status'], 'int');
+
                     continue;
                 }
 
