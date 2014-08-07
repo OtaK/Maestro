@@ -270,6 +270,7 @@
         /**
          * Sends outgoing request with cURL
          * @param $options array - Options array
+         * @throws \Exception
          * @return \Maestro\HTTP\Response
          */
         public function send(array $options = array())
