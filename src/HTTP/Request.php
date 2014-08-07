@@ -294,6 +294,17 @@
 
             list($headers, $body) = explode("\r\n\r\n", $ret, 2);
             $rawHeaders = $this->_parseRawHeaders($headers);
+
+            // If HTTP 100 Continue, parse the Continue response
+            $contCount = 0;
+            while ($rawHeaders['http']['status'] === HttpStatusCode::CONTINUE_)
+            {
+                list($headers, $body) = explode("\r\n\r\n", $body, 2);
+                $rawHeaders = $this->_parseRawHeaders($headers);
+                if (++$contCount === 10)
+                    throw new \Exception('Too many HTTP 100 Continue found, check your request');
+            }
+
             $response = new Response();
             $response->set($rawHeaders['headers']);
             $response->status($rawHeaders['http']['status']);
